@@ -1,8 +1,15 @@
-﻿using System.Windows;
+﻿using System.Globalization;
+using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using CsvHelper;
+using Microsoft.Win32;
+using NetTopologySuite.Geometries;
+using Point = System.Windows.Point;
+using Polygon = NetTopologySuite.Geometries.Polygon;
 
 namespace PointInPolygon;
 
@@ -25,10 +32,15 @@ public partial class MainWindow : Window
     private void HomePointsCanvas_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         var point = e.GetPosition(HomePointsCanvas);
+        
+        var gf = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(4326);
+        var gfPoint = gf.CreatePoint(new Coordinate(point.X, point.Y));
+        var gfPolygon = gf.CreatePolygon(_homePolygonPoints.Select(p => new Coordinate(p.X, p.Y)).ToArray());
+        var isInside = gfPolygon.Contains(gfPoint);
         var ellipse = new Ellipse
         {
             Width = 10, Height = 10,
-            Fill = HomePolygon.IsPointInside(point) ? Brushes.Green : Brushes.Red,
+            Fill = isInside ? Brushes.Green : Brushes.Red,
         };
 
         HomePointsCanvas.Children.Add(ellipse);
@@ -90,4 +102,22 @@ public partial class MainWindow : Window
         HomePointsCanvas.Children.Clear();
         _homePolygonPoints.ForEach(p => HomePolygon.Points.Add(p));
     }
+
+    private void UploadFile_OnClick(object sender, RoutedEventArgs e)
+    {
+        var fileDialog = new OpenFileDialog
+        {
+            DefaultExt = ".csv",
+        };
+        if(fileDialog.ShowDialog() == false)
+            return;
+
+        var lines = new List<string[]>();
+        using var reader = new StreamReader(fileDialog.FileName);
+        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+        {
+        }
+    }
+
+    private record CsvPolygonData(string WKT, string Name, string Description);
 }

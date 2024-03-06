@@ -11,14 +11,23 @@
                 <TabItem.Header>Home</TabItem.Header>
                 <TabItem.Content>
                     <Grid>
-                        <Polygon Name="HomePolygon"
-                                 Stroke="Black"
-                                 Fill="LightBlue"
-                                 StrokeThickness="2" />
-                        <Canvas Name="HomePointsCanvas"
-                                Background="Transparent"
-                                MouseDown="HomePointsCanvas_OnMouseDown">
-                        </Canvas>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ToolBarPanel Grid.Row="0" Orientation="Horizontal">
+                            <Button Name="UploadFile" Click="UploadFile_OnClick">Upload file</Button>
+                        </ToolBarPanel>
+                        <Grid Grid.Row="1">
+                            <Polygon Name="HomePolygon"
+                                     Stroke="Black"
+                                     Fill="LightBlue"
+                                     StrokeThickness="2" />
+                            <Canvas Name="HomePointsCanvas"
+                                    Background="Transparent"
+                                    MouseDown="HomePointsCanvas_OnMouseDown">
+                            </Canvas>
+                        </Grid>
                     </Grid>
                 </TabItem.Content>
             </TabItem>
