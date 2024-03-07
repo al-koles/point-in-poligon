@@ -19,14 +19,9 @@
                             <Button Name="UploadFile" Click="UploadFile_OnClick">Upload file</Button>
                         </ToolBarPanel>
                         <Grid Grid.Row="1">
-                            <Polygon Name="HomePolygon"
-                                     Stroke="Black"
-                                     Fill="LightBlue"
-                                     StrokeThickness="2" />
-                            <Canvas Name="HomePointsCanvas"
+                            <Canvas Name="HomeCanvas"
                                     Background="Transparent"
-                                    MouseDown="HomePointsCanvas_OnMouseDown">
-                            </Canvas>
+                                    MouseDown="HomePointsCanvas_OnMouseDown" />
                         </Grid>
                     </Grid>
                 </TabItem.Content>

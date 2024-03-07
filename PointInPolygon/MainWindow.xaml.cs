@@ -6,10 +6,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using CsvHelper;
+using CsvHelper.Configuration.Attributes;
 using Microsoft.Win32;
-using NetTopologySuite.Geometries;
 using Point = System.Windows.Point;
-using Polygon = NetTopologySuite.Geometries.Polygon;
+using Polygon = System.Windows.Shapes.Polygon;
 
 namespace PointInPolygon;
 
@@ -19,31 +19,30 @@ namespace PointInPolygon;
 public partial class MainWindow : Window
 {
     private readonly List<Point> _newPolygonPoints = [];
+    private readonly NetTopologySuitePolygons _topologySuitePolygons = new();
 
-    private readonly List<Point> _homePolygonPoints =
-        [new Point(200, 100), new Point(400, 100), new Point (350, 200), new Point(450, 400)];
+    private  List<Point[]> _homePolygons =
+        [[new Point(200, 100), new Point(400, 100), new Point (350, 200), new Point(450, 400)]];
 
     public MainWindow()
     {
         InitializeComponent();
-        PrintHomePolygon();
+        PrintHomePolygons();
+        _topologySuitePolygons.Load(_homePolygons);
     }
 
     private void HomePointsCanvas_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
-        var point = e.GetPosition(HomePointsCanvas);
-        
-        var gf = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(4326);
-        var gfPoint = gf.CreatePoint(new Coordinate(point.X, point.Y));
-        var gfPolygon = gf.CreatePolygon(_homePolygonPoints.Select(p => new Coordinate(p.X, p.Y)).ToArray());
-        var isInside = gfPolygon.Contains(gfPoint);
+        var point = e.GetPosition(HomeCanvas);
+
+        var isInside = _topologySuitePolygons.Contains(point);
         var ellipse = new Ellipse
         {
             Width = 10, Height = 10,
             Fill = isInside ? Brushes.Green : Brushes.Red,
         };
 
-        HomePointsCanvas.Children.Add(ellipse);
+        HomeCanvas.Children.Add(ellipse);
         Canvas.SetLeft(ellipse, point.X - ellipse.Width / 2);
         Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
     }
@@ -81,11 +80,12 @@ public partial class MainWindow : Window
 
     private void SaveButton_OnClick(object sender, RoutedEventArgs e)
     {
-        _homePolygonPoints.Clear();
-        _homePolygonPoints.AddRange(_newPolygonPoints);
-        PrintHomePolygon();
+        _homePolygons.Clear();
+        _homePolygons.Add(_newPolygonPoints.ToArray());
+        _topologySuitePolygons.Load(_homePolygons);
+        PrintHomePolygons();
         MyTabControl.SelectedIndex = 0;
-        
+
         _newPolygonPoints.Clear();
         NewPolygonCanvas.Children.Clear();
     }
@@ -96,28 +96,47 @@ public partial class MainWindow : Window
         NewPolygonCanvas.Children.Clear();
     }
 
-    private void PrintHomePolygon()
-    {
-        HomePolygon.Points.Clear();
-        HomePointsCanvas.Children.Clear();
-        _homePolygonPoints.ForEach(p => HomePolygon.Points.Add(p));
-    }
-
     private void UploadFile_OnClick(object sender, RoutedEventArgs e)
     {
         var fileDialog = new OpenFileDialog
         {
             DefaultExt = ".csv",
         };
-        if(fileDialog.ShowDialog() == false)
+        if (fileDialog.ShowDialog() == false)
             return;
 
-        var lines = new List<string[]>();
         using var reader = new StreamReader(fileDialog.FileName);
-        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var polygons = csv.GetRecords<CsvPolygonData>();
+        _topologySuitePolygons.LoadFromWkt(polygons.Select(p => p.Wkt));
+
+        _homePolygons = _topologySuitePolygons.Polygons;
+        PrintHomePolygons();
+    }
+
+    private void PrintHomePolygons()
+    {
+        HomeCanvas.Children.Clear();
+        foreach (var polygonPoints in _homePolygons)
         {
+            var polygon = new Polygon
+            {
+                Stroke = Brushes.Black,
+                Fill = Brushes.LightBlue,
+                StrokeThickness = 2,
+                Points = new PointCollection(polygonPoints),
+            };
+            HomeCanvas.Children.Add(polygon);
         }
     }
 
-    private record CsvPolygonData(string WKT, string Name, string Description);
+    private class CsvPolygonData
+    {
+        [Name("WKT")]
+        public string Wkt { get; init; } = null!;
+        [Name("name")]
+        public string Name { get; init; } = null!;
+        [Name("description")]
+        public string Description { get; init; } = null!;
+    }
 }
