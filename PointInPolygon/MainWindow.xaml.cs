@@ -151,12 +151,12 @@ public partial class MainWindow : Window
     private class CsvPolygonData
     {
         [Name("WKT")]
-        public string Wkt { get; init; } = null!;
+        public string Wkt { get; set; } = null!;
 
         [Name("name")]
-        public string Name { get; init; } = null!;
+        public string Name { get; set; } = null!;
 
         [Name("description")]
-        public string Description { get; init; } = null!;
+        public string Description { get; set; } = null!;
     }
 }
