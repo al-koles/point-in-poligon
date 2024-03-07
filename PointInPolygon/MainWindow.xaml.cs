@@ -111,6 +111,9 @@ public partial class MainWindow : Window
         _topologySuitePolygons.LoadFromWkt(polygons.Select(p => p.Wkt));
 
         _homePolygons = _topologySuitePolygons.Polygons;
+        ScaleHomePolygons(50);
+        _topologySuitePolygons.Load(_homePolygons);
+
         PrintHomePolygons();
     }
 
@@ -130,12 +133,29 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ScaleHomePolygons(double scale)
+    {
+        _homePolygons = _homePolygons.Select(polygonPoints => polygonPoints.Select(point =>
+                {
+                    point.X -= 25;
+                    point.X *= scale;
+
+                    point.Y -= 45;
+                    point.Y *= scale;
+                    return point;
+                })
+                .ToArray())
+            .ToList();
+    }
+
     private class CsvPolygonData
     {
         [Name("WKT")]
         public string Wkt { get; init; } = null!;
+
         [Name("name")]
         public string Name { get; init; } = null!;
+
         [Name("description")]
         public string Description { get; init; } = null!;
     }
