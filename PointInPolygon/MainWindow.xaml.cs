@@ -24,7 +24,7 @@ public partial class MainWindow : Window
     private  List<Point[]> _homePolygons =
         [[new Point(200, 100), new Point(400, 100), new Point (350, 200), new Point(450, 400)]];
 
-    public MainWindow()
+    public MainWindow()//change
     {
         InitializeComponent();
         PrintHomePolygons();
